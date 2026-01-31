@@ -2,11 +2,13 @@
 const SHEET_HEADERS = ["行番号", "話者", "セリフ"];
 
 function doPost(e) {
+  // Web アプリのエントリーポイントとして処理を委譲する
   const result = handlePostRequest(e);
   return buildJsonResponse(result);
 }
 
 function handlePostRequest(e) {
+  // 依存関係を順に検証し、失敗時は即時にレスポンスを返す
   const configResult = getConfig();
   if (!configResult.ok) {
     return configResult.response;
@@ -206,6 +208,7 @@ function createSheetAndWrite(spreadsheetId, theme, rows) {
 }
 
 function buildSheetName(spreadsheet, theme) {
+  // 採番と正規化をまとめてシート名を構築する
   const sequence = getNextSheetNumber(spreadsheet);
   const normalizedTheme = normalizeTheme(theme);
   return formatSequence(sequence) + "_" + normalizedTheme;
@@ -246,11 +249,13 @@ function normalizeTheme(theme) {
 }
 
 function formatSequence(number) {
+  // 連番を 3 桁のゼロ埋め表現に揃える
   const padded = "000" + number;
   return padded.slice(-3);
 }
 
 function buildSuccessResponse(sheetName, rowsWritten, rowsSkipped) {
+  // 成功時のレスポンス形式を統一する
   return {
     ok: true,
     sheet_name: sheetName,
@@ -260,6 +265,7 @@ function buildSuccessResponse(sheetName, rowsWritten, rowsSkipped) {
 }
 
 function buildErrorResponse(code, message, rowsSkipped) {
+  // 失敗時のレスポンス形式を統一する
   return {
     ok: false,
     error: {
@@ -271,6 +277,7 @@ function buildErrorResponse(code, message, rowsSkipped) {
 }
 
 function buildJsonResponse(payload) {
+  // JSON として返すための ContentService ラッパー
   return ContentService.createTextOutput(JSON.stringify(payload)).setMimeType(
     ContentService.MimeType.JSON
   );
