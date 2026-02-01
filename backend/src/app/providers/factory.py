@@ -10,6 +10,10 @@ def create_provider(settings: Settings) -> LlmProvider:
     provider = settings.llm_provider.lower()
 
     if provider == "gemini":
-        return GeminiProvider(settings.gemini_api_key or "", settings.gemini_model)
+        return GeminiProvider(
+            settings.gemini_api_key or "",
+            settings.gemini_model,
+            settings.prompt_path,
+        )
 
     raise ValueError("対応していない LLM プロバイダです。")

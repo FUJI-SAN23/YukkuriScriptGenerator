@@ -8,7 +8,7 @@ from app.providers.base import LlmProvider
 class GeminiProvider(LlmProvider):
     """Gemini を利用して台本を生成する実装。"""
     # Gemini クライアントを初期化し、モデル名を保持する
-    def __init__(self, api_key: str, model: str) -> None:
+    def __init__(self, api_key: str, model: str, prompt_path: str | None) -> None:
         """API キーとモデル名を受け取りクライアントを初期化する。"""
         # API キーは環境変数で受け取り、ログには出さない
         if not api_key:
@@ -17,13 +17,14 @@ class GeminiProvider(LlmProvider):
         os.environ["GEMINI_API_KEY"] = api_key
         self._client = genai.Client()
         self._model = model
+        self._prompt_path = prompt_path
 
     # Gemini で台本を生成する
     def generate_script(self, theme: str) -> str:
         """Gemini にテーマを渡して TSV 台本を生成する。"""
         response = self._client.models.generate_content(
             model=self._model,
-            contents=build_prompt(theme),
+            contents=build_prompt(theme, self._prompt_path),
         )
 
         text = response.text or ""
@@ -31,8 +32,12 @@ class GeminiProvider(LlmProvider):
 
 
 # 生成ルールを固定し、TSV 形式を守らせる
-def build_prompt(theme: str) -> str:
+def build_prompt(theme: str, prompt_path: str | None) -> str:
     """TSV 形式を守るためのプロンプト文を組み立てる。"""
+    prompt_from_file = load_prompt_from_file(prompt_path)
+    if prompt_from_file:
+        return prompt_from_file.replace("{theme}", theme)
+
     return (
         "あなたは、ゆっくり解説動画の台本を作るアシスタントです。\n"
         "以下のルールで TSV 形式の台本を出力してください。\n\n"
@@ -45,3 +50,15 @@ def build_prompt(theme: str) -> str:
         f"テーマ: {theme}\n"
         "出力:\n"
     )
+
+
+def load_prompt_from_file(prompt_path: str | None) -> str | None:
+    """外部プロンプトが指定されていれば読み込み、失敗時は None を返す。"""
+    if not prompt_path:
+        return None
+
+    try:
+        with open(prompt_path, "r", encoding="utf-8") as file:
+            return file.read().strip()
+    except OSError:
+        return None

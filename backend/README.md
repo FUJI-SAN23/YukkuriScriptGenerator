@@ -27,6 +27,7 @@ pip install -r requirements.txt
 - `LLM_PROVIDER` (default: gemini)
 - `GEMINI_API_KEY` (必須)
 - `GEMINI_MODEL` (default: gemini-2.5-flash)
+- `PROMPT_PATH` (任意: 外部プロンプトファイルのパス)
 
 例:
 
@@ -34,6 +35,7 @@ pip install -r requirements.txt
 export LLM_PROVIDER="gemini"
 export GEMINI_API_KEY="your-api-key"
 export GEMINI_MODEL="gemini-2.5-flash"
+export PROMPT_PATH="backend/prompts/yukkuri_tsv.txt"
 ```
 
 ## 起動
@@ -107,6 +109,15 @@ curl -X POST "http://127.0.0.1:8000/generate" \
 - 話者は「霊夢」「魔理沙」のみ
 - 導入 / 本編 / まとめ / 締めの一言を含める
 - 1行のセリフは短め
+
+## プロンプトの差し替え
+
+`PROMPT_PATH` にファイルパスを指定すると、その内容をそのままプロンプトとして使います。
+ファイル内では `{theme}` をテーマの差し込み用プレースホルダとして利用できます。
+
+サンプル:
+
+- `backend/prompts/yukkuri_tsv.txt`
 
 ## トラブルシュート
 
