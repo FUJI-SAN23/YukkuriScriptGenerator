@@ -23,7 +23,7 @@
 ## curl 例
 
 ```bash
-curl -X POST "$WEB_APP_URL" \
+curl -i -L --location-trusted "$WEB_APP_URL" \
   -H "Content-Type: application/json" \
   -H "X-Webhook-Token: $TOKEN" \
   -d '{

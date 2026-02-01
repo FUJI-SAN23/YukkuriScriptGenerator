@@ -32,7 +32,7 @@ function handlePostRequest(e) {
   const writeResult = createSheetAndWrite(
     configResult.value.spreadsheetId,
     requestResult.value.theme,
-    tsvResult.value.rows
+    tsvResult.value.rows,
   );
   if (!writeResult.ok) {
     return writeResult.response;
@@ -41,7 +41,7 @@ function handlePostRequest(e) {
   return buildSuccessResponse(
     writeResult.value.sheetName,
     writeResult.value.rowsWritten,
-    tsvResult.value.rowsSkipped
+    tsvResult.value.rowsSkipped,
   );
 }
 
@@ -57,7 +57,7 @@ function getConfig() {
       response: buildErrorResponse(
         "config_missing",
         "必要な設定が不足しています。",
-        0
+        0,
       ),
     };
   }
@@ -79,14 +79,14 @@ function authenticateRequest(e, expectedToken) {
   if (!token) {
     return {
       ok: false,
-      response: buildErrorResponse("unauthorized", "認証に失敗しました。", 0),
+      response: buildErrorResponse("token_missing", "認証に失敗しました。", 0),
     };
   }
 
   if (token !== expectedToken) {
     return {
       ok: false,
-      response: buildErrorResponse("unauthorized", "認証に失敗しました。", 0),
+      response: buildErrorResponse("token_mismatch", "認証に失敗しました。", 0),
     };
   }
 
@@ -98,7 +98,11 @@ function parseRequestPayload(e) {
   if (!e || !e.postData || !e.postData.contents) {
     return {
       ok: false,
-      response: buildErrorResponse("invalid_request", "リクエストが不正です。", 0),
+      response: buildErrorResponse(
+        "invalid_request",
+        "リクエストが不正です。",
+        0,
+      ),
     };
   }
 
@@ -112,7 +116,8 @@ function parseRequestPayload(e) {
     };
   }
 
-  const theme = payload && typeof payload.theme === "string" ? payload.theme : "";
+  const theme =
+    payload && typeof payload.theme === "string" ? payload.theme : "";
   const scriptTsv =
     payload && typeof payload.script_tsv === "string" ? payload.script_tsv : "";
 
@@ -122,7 +127,7 @@ function parseRequestPayload(e) {
       response: buildErrorResponse(
         "invalid_payload",
         "必要な項目が不足しています。",
-        0
+        0,
       ),
     };
   }
@@ -202,7 +207,11 @@ function createSheetAndWrite(spreadsheetId, theme, rows) {
   } catch (error) {
     return {
       ok: false,
-      response: buildErrorResponse("write_failed", "書き込みに失敗しました。", 0),
+      response: buildErrorResponse(
+        "write_failed",
+        "書き込みに失敗しました。",
+        0,
+      ),
     };
   }
 }
@@ -279,6 +288,6 @@ function buildErrorResponse(code, message, rowsSkipped) {
 function buildJsonResponse(payload) {
   // JSON として返すための ContentService ラッパー
   return ContentService.createTextOutput(JSON.stringify(payload)).setMimeType(
-    ContentService.MimeType.JSON
+    ContentService.MimeType.JSON,
   );
 }
