@@ -1,0 +1,2 @@
+export WEB_APP_URL="replace-me"
+export TOKEN="replace-me"

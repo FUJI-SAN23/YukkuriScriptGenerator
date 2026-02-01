@@ -5,3 +5,4 @@ venv/
 backend/.venv/
 __pycache__/
 *.pyc
+.envrc

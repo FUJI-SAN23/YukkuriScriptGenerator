@@ -1,0 +1,4 @@
+export PYTHONPATH=src
+export LLM_PROVIDER=gemini
+export GEMINI_MODEL=gemini-2.5-flash
+export GEMINI_API_KEY="replace-me"

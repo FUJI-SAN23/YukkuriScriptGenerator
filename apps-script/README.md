@@ -36,6 +36,16 @@ curl -i -L --location-trusted "$WEB_APP_URL" \
   }'
 ```
 
+### .envrc を使う例（direnv）
+
+`.envrc.example` をコピーして `.envrc` を作成し、実際の値を設定してください。
+
+```bash
+cd /Users/FUJI/workspace/yukkuri/apps-script
+cp .envrc.example .envrc
+direnv allow
+```
+
 ### 直接埋め込む例（動作確認用）
 
 ```bash

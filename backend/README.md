@@ -41,7 +41,17 @@ export PROMPT_PATH="backend/prompts/yukkuri_tsv.txt"
 ## 起動
 
 ```bash
-uvicorn app.main:app --reload --port 8000
+uvicorn app.main:app --reload --app-dir src --port 8000
+```
+
+## direnv（.envrc）での設定例
+
+`.envrc.example` をコピーして `.envrc` を作成し、実際の値を設定してください。
+
+```bash
+cd /Users/FUJI/workspace/yukkuri/backend
+cp .envrc.example .envrc
+direnv allow
 ```
 
 ## エンドポイント
