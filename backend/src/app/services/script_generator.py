@@ -5,6 +5,7 @@ from app.settings import Settings
 # 台本生成のユースケースをまとめ、エラーは簡潔に返す
 
 def generate_script_tsv(settings: Settings, theme: str) -> str:
+    """生成処理の流れをまとめ、TSV を返す。"""
     if not theme or theme.strip() == "":
         raise ValueError("theme が空です。")
 
@@ -21,6 +22,7 @@ def generate_script_tsv(settings: Settings, theme: str) -> str:
 # TSV の最低限の形式を検証し、不正ならエラーにする
 
 def validate_tsv(tsv_text: str) -> None:
+    """TSV の最低限の形式を検証し、不正なら例外にする。"""
     lines = [line for line in tsv_text.split("\n") if line.strip() != ""]
     if not lines:
         raise ValueError("台本が空です。")

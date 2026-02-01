@@ -10,6 +10,7 @@ app = FastAPI()
 
 # エラーレスポンスの形式を統一し、詳細情報は返さない
 def build_error_response(code: str, message: str, status_code: int = 400) -> JSONResponse:
+    """エラーのレスポンス形式を統一して返す。"""
     payload = {"ok": False, "error": {"code": code, "message": message}}
     return JSONResponse(status_code=status_code, content=payload)
 
@@ -17,12 +18,14 @@ def build_error_response(code: str, message: str, status_code: int = 400) -> JSO
 # 動作確認用の簡易エンドポイント
 @app.get("/health")
 def health_check() -> dict:
+    """死活監視向けに固定レスポンスを返す。"""
     return {"ok": True}
 
 
 # テーマから TSV 台本を生成して返す
 @app.post("/generate", response_model=GenerateResponse)
 def generate(request: GenerateRequest) -> GenerateResponse:
+    """テーマから TSV 台本を生成して返す。"""
     settings = load_settings()
     try:
         script_tsv = generate_script_tsv(settings, request.theme)
