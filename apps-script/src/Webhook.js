@@ -1,12 +1,14 @@
 // 列定義は将来拡張を見据えて一箇所に集約する
 const SHEET_HEADERS = ["行番号", "話者", "セリフ"];
 
+// Webhook 入口でリクエストを受け取り JSON 形式のレスポンスを返す
 function doPost(e) {
   // Web アプリのエントリーポイントとして処理を委譲する
   const result = handlePostRequest(e);
   return buildJsonResponse(result);
 }
 
+// Webhook 全体の制御フローをまとめ、各処理の結果を合成する
 function handlePostRequest(e) {
   // 依存関係を順に検証し、失敗時は即時にレスポンスを返す
   const configResult = getConfig();
@@ -45,6 +47,7 @@ function handlePostRequest(e) {
   );
 }
 
+// スクリプトプロパティから必要な設定を取得して検証する
 function getConfig() {
   // 設定値は Script Properties に集約し、コードに埋め込まない
   const properties = PropertiesService.getScriptProperties();
@@ -71,10 +74,30 @@ function getConfig() {
   };
 }
 
+// 受信リクエストに含まれるトークンを検証して認可を判定する
 function authenticateRequest(e, expectedToken) {
-  // GAS ではヘッダ取得が制限されるため、存在しない場合は未認証として扱う
+  // リダイレクトでヘッダが落ちる環境があるため、複数経路からトークンを拾う
   const headers = e && e.headers ? e.headers : {};
-  const token = headers["X-Webhook-Token"] || headers["x-webhook-token"] || "";
+  const tokenFromHeader =
+    headers["x-webhook-token"] ||
+    headers["X-Webhook-Token"] ||
+    headers["X-WEBHOOK-TOKEN"] ||
+    "";
+  const tokenFromQuery =
+    e && e.parameter ? e.parameter.token || e.parameter.TOKEN || "" : "";
+
+  let tokenFromBody = "";
+  try {
+    if (e && e.postData && e.postData.contents) {
+      const payload = JSON.parse(e.postData.contents);
+      tokenFromBody =
+        payload && (payload.token || payload.TOKEN) ? payload.token || payload.TOKEN : "";
+    }
+  } catch (error) {
+    // 本文が壊れていても、ヘッダ/クエリの認証ができるためここでは失敗させない
+  }
+
+  const token = tokenFromHeader || tokenFromQuery || tokenFromBody || "";
 
   if (!token) {
     return {
@@ -93,6 +116,7 @@ function authenticateRequest(e, expectedToken) {
   return { ok: true };
 }
 
+// JSON 本文から必要なパラメータを抽出して検証する
 function parseRequestPayload(e) {
   // 本文が空の場合は安全側でエラーにする
   if (!e || !e.postData || !e.postData.contents) {
@@ -141,6 +165,7 @@ function parseRequestPayload(e) {
   };
 }
 
+// 受信した TSV を行配列に変換し、不正行数も集計する
 function parseTsv(tsv) {
   // TSV の解析は副作用を持たない純粋処理として分離する
   if (typeof tsv !== "string") {
@@ -187,6 +212,7 @@ function parseTsv(tsv) {
   };
 }
 
+// 新しいシートを作成し、ヘッダと本文をまとめて書き込む
 function createSheetAndWrite(spreadsheetId, theme, rows) {
   // ここでのみスプレッドシートに書き込む
   try {
@@ -216,6 +242,7 @@ function createSheetAndWrite(spreadsheetId, theme, rows) {
   }
 }
 
+// シート名の採番とテーマ整形を組み合わせて最終名を返す
 function buildSheetName(spreadsheet, theme) {
   // 採番と正規化をまとめてシート名を構築する
   const sequence = getNextSheetNumber(spreadsheet);
@@ -223,6 +250,7 @@ function buildSheetName(spreadsheet, theme) {
   return formatSequence(sequence) + "_" + normalizedTheme;
 }
 
+// 既存シートを走査して次の連番を算出する
 function getNextSheetNumber(spreadsheet) {
   // 既存シート名の最大値から次の連番を計算する
   const sheets = spreadsheet.getSheets();
@@ -250,6 +278,7 @@ function getNextSheetNumber(spreadsheet) {
   return next;
 }
 
+// テーマ文字列をシート名に使えるよう整形し長さを制限する
 function normalizeTheme(theme) {
   // シート名に使えない文字は _ に置換し、長さを制限する
   const trimmed = theme.trim();
@@ -257,12 +286,14 @@ function normalizeTheme(theme) {
   return replaced.substring(0, 20);
 }
 
+// 連番を 3 桁固定の文字列に変換する
 function formatSequence(number) {
   // 連番を 3 桁のゼロ埋め表現に揃える
   const padded = "000" + number;
   return padded.slice(-3);
 }
 
+// 正常系レスポンスを API 仕様に合わせて組み立てる
 function buildSuccessResponse(sheetName, rowsWritten, rowsSkipped) {
   // 成功時のレスポンス形式を統一する
   return {
@@ -273,6 +304,7 @@ function buildSuccessResponse(sheetName, rowsWritten, rowsSkipped) {
   };
 }
 
+// 異常系レスポンスを API 仕様に合わせて組み立てる
 function buildErrorResponse(code, message, rowsSkipped) {
   // 失敗時のレスポンス形式を統一する
   return {
@@ -285,6 +317,7 @@ function buildErrorResponse(code, message, rowsSkipped) {
   };
 }
 
+// JSON 出力用の ContentService レスポンスを生成する
 function buildJsonResponse(payload) {
   // JSON として返すための ContentService ラッパー
   return ContentService.createTextOutput(JSON.stringify(payload)).setMimeType(
