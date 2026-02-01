@@ -1,2 +1,7 @@
 .clasp.json
 .clasp.json.*
+.venv/
+venv/
+backend/.venv/
+__pycache__/
+*.pyc
