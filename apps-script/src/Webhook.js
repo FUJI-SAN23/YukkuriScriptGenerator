@@ -13,21 +13,25 @@ function handlePostRequest(e) {
   // 依存関係を順に検証し、失敗時は即時にレスポンスを返す
   const configResult = getConfig();
   if (!configResult.ok) {
+    logErrorResponse(configResult.response);
     return configResult.response;
   }
 
   const authResult = authenticateRequest(e, configResult.value.token);
   if (!authResult.ok) {
+    logErrorResponse(authResult.response);
     return authResult.response;
   }
 
   const requestResult = parseRequestPayload(e);
   if (!requestResult.ok) {
+    logErrorResponse(requestResult.response);
     return requestResult.response;
   }
 
   const tsvResult = parseTsv(requestResult.value.scriptTsv);
   if (!tsvResult.ok) {
+    logErrorResponse(tsvResult.response);
     return tsvResult.response;
   }
 
@@ -37,6 +41,7 @@ function handlePostRequest(e) {
     tsvResult.value.rows,
   );
   if (!writeResult.ok) {
+    logErrorResponse(writeResult.response);
     return writeResult.response;
   }
 
@@ -322,5 +327,27 @@ function buildJsonResponse(payload) {
   // JSON として返すための ContentService ラッパー
   return ContentService.createTextOutput(JSON.stringify(payload)).setMimeType(
     ContentService.MimeType.JSON,
+  );
+}
+
+// 失敗時のみ最小情報をログに残し、秘密情報は記録しない
+function logErrorResponse(response) {
+  if (!response || response.ok) {
+    return;
+  }
+
+  const errorCode = response.error && response.error.code ? response.error.code : "unknown_error";
+  const rowsSkipped =
+    typeof response.rows_skipped === "number" ? response.rows_skipped : 0;
+  const requestId = Utilities.getUuid();
+
+  console.log(
+    JSON.stringify({
+      level: "error",
+      request_id: requestId,
+      error_code: errorCode,
+      rows_skipped: rowsSkipped,
+      timestamp: new Date().toISOString(),
+    }),
   );
 }
